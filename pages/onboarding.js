@@ -305,7 +305,7 @@ function AisymetryCanvas({ visualStage }) {
 
       if (state.stage >= 3) updateConnections(width);
 
-      const eyeProgress = state.eyeStart ? Math.min(1, (now - state.eyeStart) / 5000) : 0;
+      const eyeProgress = state.eyeStart ? Math.max(0, Math.min(1, (now - state.eyeStart) / 5000)) : 0;
       const steadyGlow = state.stage === 5 && state.eyeStart && now - state.eyeStart > 7000 ? 1 : 0;
       const illumination = Math.max(eyeProgress, steadyGlow * 0.7);
 
