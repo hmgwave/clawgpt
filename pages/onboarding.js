@@ -104,6 +104,7 @@ function drawParticle(ctx, particle, stageValue, now, illuminated) {
 
 function AisymetryCanvas({ visualStage }) {
   const canvasRef = useRef(null);
+  const visualStageRef = useRef(visualStage);
   const stateRef = useRef({
     particles: [],
     connections: [],
@@ -207,6 +208,10 @@ function AisymetryCanvas({ visualStage }) {
   }, []);
 
   useEffect(() => {
+    visualStageRef.current = visualStage;
+  }, [visualStage]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     let animationFrame;
@@ -226,7 +231,7 @@ function AisymetryCanvas({ visualStage }) {
       stateRef.current.connections = [];
       stateRef.current.stage = 1;
       stateRef.current.previousStage = 1;
-      for (let stage = 2; stage <= visualStage; stage += 1) {
+      for (let stage = 2; stage <= visualStageRef.current; stage += 1) {
         setStage(stage, width, height);
       }
     };
@@ -267,7 +272,7 @@ function AisymetryCanvas({ visualStage }) {
       const width = window.innerWidth;
       const height = window.innerHeight;
       const state = stateRef.current;
-      setStage(visualStage, width, height);
+      setStage(visualStageRef.current, width, height);
 
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = COLORS.background;
@@ -372,7 +377,7 @@ function AisymetryCanvas({ visualStage }) {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrame);
     };
-  }, [setStage, visualStage]);
+  }, [setStage]);
 
   return <canvas ref={canvasRef} className="fixed inset-0 h-screen w-screen" aria-hidden="true" />;
 }

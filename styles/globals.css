@@ -4,6 +4,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@theme {
+  --color-aisymetry-bg: #0a1628;
+  --color-primary-gold: #c9922a;
+  --color-warm-gold: #d9a347;
+  --color-soft-gold: #e5b660;
+  --color-cream: #f5f0e6;
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-serif: "Fraunces", serif;
+}
+
 html,
 body,
 #__next {
