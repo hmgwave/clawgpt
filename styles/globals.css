@@ -1,0 +1,21 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#__next {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #0a1628;
+  color: #f5f0e6;
+}
+
+* {
+  box-sizing: border-box;
+}
