@@ -422,6 +422,10 @@ export default function Onboarding() {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
+  const startQuestions = useCallback(() => {
+    if (phase === 'opening') setPhase('question');
+  }, [phase]);
+
   const handleSubmit = useCallback((event) => {
     event.preventDefault();
     if (!canSubmit) return;
@@ -461,7 +465,14 @@ export default function Onboarding() {
         <title>Aisymetry Onboarding</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <main className="relative h-screen w-screen overflow-hidden bg-aisymetry-bg text-cream">
+      <main
+        className="relative h-screen w-screen overflow-hidden bg-aisymetry-bg text-cream"
+        onClick={startQuestions}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') startQuestions();
+        }}
+        role="presentation"
+      >
         <AisymetryCanvas visualStage={visualStage} />
         <div className="pointer-events-none fixed inset-0 opacity-[0.03] mix-blend-screen">
           <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
