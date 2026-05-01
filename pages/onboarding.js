@@ -305,7 +305,7 @@ function AisymetryCanvas({ visualStage }) {
 
       if (state.stage >= 3) updateConnections(width);
 
-      const eyeProgress = state.eyeStart ? Math.min(1, (now - state.eyeStart) / 5000) : 0;
+      const eyeProgress = state.eyeStart ? Math.max(0, Math.min(1, (now - state.eyeStart) / 5000)) : 0;
       const steadyGlow = state.stage === 5 && state.eyeStart && now - state.eyeStart > 7000 ? 1 : 0;
       const illumination = Math.max(eyeProgress, steadyGlow * 0.7);
 
@@ -538,7 +538,7 @@ export default function Onboarding() {
                   variants={textVariants}
                   transition={{ duration: 0.9, ease: 'easeOut' }}
                   onSubmit={handleSubmit}
-                  className="w-full max-w-3xl"
+                  className="w-full max-w-3xl text-center"
                 >
                   <h1 className="font-display text-4xl font-bold uppercase leading-tight tracking-[0.08em] text-cream drop-shadow-[0_0_24px_rgba(201,146,42,0.18)] sm:text-6xl">
                     {questions[currentQuestion]}
@@ -598,7 +598,7 @@ export default function Onboarding() {
                   animate="visible"
                   exit="exit"
                   transition={{ staggerChildren: 0.55 }}
-                  className="w-full"
+                  className="w-full text-center"
                 >
                   <motion.h2
                     variants={textVariants}
@@ -637,7 +637,7 @@ export default function Onboarding() {
                           initial={{ opacity: 0, y: 18 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.7, delay: index * 0.18 }}
-                          className="border-t border-primary-gold bg-[#0d1b30]/80 p-5 text-left shadow-[0_20px_70px_rgba(0,0,0,0.3)] backdrop-blur-md"
+                          className="border-t border-primary-gold bg-[#0d1b30]/80 p-5 text-center shadow-[0_20px_70px_rgba(0,0,0,0.3)] backdrop-blur-md"
                         >
                           <p className="font-serif text-lg italic leading-relaxed text-cream/88">
                             {card}
