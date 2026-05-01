@@ -379,7 +379,7 @@ function AisymetryCanvas({ visualStage }) {
     };
   }, [setStage]);
 
-  return <canvas ref={canvasRef} className="fixed inset-0 h-screen w-screen" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-0 h-screen w-screen" aria-hidden="true" />;
 }
 
 export default function Onboarding() {
@@ -474,7 +474,7 @@ export default function Onboarding() {
         role="presentation"
       >
         <AisymetryCanvas visualStage={visualStage} />
-        <div className="pointer-events-none fixed inset-0 opacity-[0.03] mix-blend-screen">
+        <div className="pointer-events-none fixed inset-0 z-[1] opacity-[0.03] mix-blend-screen">
           <svg className="h-full w-full" xmlns="http://www.w3.org/2000/svg">
             <filter id="grain">
               <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
@@ -483,17 +483,26 @@ export default function Onboarding() {
             <rect width="100%" height="100%" filter="url(#grain)" />
           </svg>
         </div>
+        <noscript>
+          <div className="fixed inset-0 z-20 flex items-center justify-center bg-aisymetry-bg px-6 text-center">
+            <div className="max-w-2xl">
+              <p className="font-serif text-2xl italic leading-relaxed text-cream">
+                Aisymetry onboarding needs JavaScript enabled to run the manifestation sequence.
+              </p>
+            </div>
+          </div>
+        </noscript>
         <section className="relative z-10 flex h-full w-full items-center justify-center px-6 py-10 sm:px-10">
           <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
             <AnimatePresence mode="wait">
               {phase === 'opening' && (
                 <motion.div
                   key="opening"
-                  initial="hidden"
+                  initial={false}
                   animate="visible"
                   exit="exit"
                   transition={{ staggerChildren: 0.65 }}
-                  className="space-y-5"
+                  className="space-y-6"
                 >
                   {openingLines.map((line) => (
                     <motion.p
@@ -505,6 +514,18 @@ export default function Onboarding() {
                       {line}
                     </motion.p>
                   ))}
+                  <motion.button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      startQuestions();
+                    }}
+                    variants={textVariants}
+                    transition={{ duration: 0.9, ease: 'easeOut' }}
+                    className="mt-6 border border-primary-gold/80 px-7 py-3 font-display text-xl font-bold uppercase tracking-[0.16em] text-cream shadow-[0_0_30px_rgba(201,146,42,0.16)] transition duration-300 hover:bg-primary-gold/15 hover:shadow-[0_0_38px_rgba(201,146,42,0.28)]"
+                  >
+                    Begin manifestation
+                  </motion.button>
                 </motion.div>
               )}
 
