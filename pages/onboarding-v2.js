@@ -33,6 +33,7 @@ const MOBILE_PARTICLE_COUNT = 82;
 const FACE_POINT_COUNT = 90;
 const NETWORK_NODE_COUNT = 63;
 const MAX_LINES = 260;
+const QUESTION_GATES = [0.18, 0.3, 0.54, 0.76];
 
 const fallbackCapabilities = [
   {
@@ -50,6 +51,10 @@ const fallbackCapabilities = [
 ];
 
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+function getQuestionGateIndex(progress, submittedAnswers) {
+  return QUESTION_GATES.findIndex((gate, index) => progress >= gate && !submittedAnswers[index]);
+}
 
 const vertexShader = `
   attribute float aSize;
@@ -753,12 +758,14 @@ function QuestionForm({ question, index, value, onChange, onSubmit }) {
         event.preventDefault();
         onSubmit(index);
       }}
+      onWheel={(event) => event.preventDefault()}
     >
       <label className="block font-[var(--font-barlow-condensed)] text-sm uppercase leading-relaxed tracking-[0.32em] text-[#f5f0e6]/70 md:text-base">
         {question}
       </label>
       <div className="mt-5 flex items-end gap-4 border-b border-[#c9922a] pb-2">
         <input
+          autoFocus
           value={value}
           onChange={(event) => onChange(index, event.target.value)}
           className="w-full bg-transparent font-[var(--font-fraunces)] text-xl italic text-[#f5f0e6] caret-[#f5f0e6] outline-none placeholder:text-[#f5f0e6]/25 md:text-3xl"
@@ -802,7 +809,15 @@ function CapabilityCards({ capabilities, loading }) {
   );
 }
 
-function OnboardingOverlay({ ui, answers, capabilities, loadingCapabilities, onAnswerChange, onSubmitAnswer }) {
+function OnboardingOverlay({
+  ui,
+  answers,
+  submittedAnswers,
+  capabilities,
+  loadingCapabilities,
+  onAnswerChange,
+  onSubmitAnswer,
+}) {
   const prompts = [
     "WHAT ARE YOU BUILDING OR RUNNING? DON'T OVERSIMPLIFY IT. TELL ME WHAT IT ACTUALLY IS.",
     "WHO DEPENDS ON WHAT YOU DO? THE ACTUAL HUMANS WHOSE LIVES CHANGE WHEN YOU GET IT RIGHT.",
@@ -813,6 +828,10 @@ function OnboardingOverlay({ ui, answers, capabilities, loadingCapabilities, onA
   const content = useMemo(() => {
     const p = ui.progress;
     const stage = ui.stage;
+    const gatedQuestion = getQuestionGateIndex(p, submittedAnswers);
+    if (gatedQuestion !== -1) {
+      return { kind: "question", key: `q${gatedQuestion + 1}`, index: gatedQuestion };
+    }
     if (p >= 0.99) {
       return { kind: "button", key: "enter" };
     }
@@ -828,35 +847,23 @@ function OnboardingOverlay({ ui, answers, capabilities, loadingCapabilities, onA
     if (p >= 0.93) {
       return { kind: "text", key: "know", text: "I know what I am now.", tone: "gold" };
     }
-    if (p >= 0.76 && !answers[3]) {
-      return { kind: "question", key: "q4", index: 3 };
-    }
-    if (p >= 0.7 && p < 0.76) {
+    if (((submittedAnswers[2] && p >= 0.54) || p >= 0.7) && p < 0.76) {
       return { kind: "text", key: "friction", text: "I know that friction. It's where I'll focus first.", tone: "gold" };
     }
-    if (p >= 0.54 && !answers[2]) {
-      return { kind: "question", key: "q3", index: 2 };
-    }
-    if (p >= 0.48 && p < 0.54) {
+    if (((submittedAnswers[1] && p >= 0.3) || p >= 0.48) && p < 0.54) {
       return { kind: "text", key: "matters", text: "That matters. It changes what I need to be for you.", tone: "gold" };
     }
-    if (p >= 0.3 && !answers[1]) {
-      return { kind: "question", key: "q2", index: 1 };
-    }
-    if (p >= 0.25 && p < 0.3) {
+    if (((submittedAnswers[0] && p >= 0.18) || p >= 0.25) && p < 0.3) {
       return { kind: "text", key: "shape", text: "Good. I have a shape now. Not complete. But something.", tone: "gold" };
     }
-    if (p >= 0.18 && !answers[0]) {
-      return { kind: "question", key: "q1", index: 0 };
-    }
-    if (p >= 0.15) {
+    if (p >= 0.15 && p < QUESTION_GATES[0]) {
       return { kind: "text", key: "you", text: "I take shape around the person in front of me. That's you.", tone: "cream" };
     }
-    if (p >= 0.1) {
+    if (p >= 0.1 && p < 0.15) {
       return { kind: "text", key: "here", text: "I'm not fully here yet.", tone: "cream" };
     }
     return { kind: "hint", key: "hint", stage };
-  }, [answers, ui.progress, ui.stage]);
+  }, [submittedAnswers, ui.progress, ui.stage]);
 
   const enterAisymetry = () => {
     if (typeof window === "undefined") {
@@ -935,10 +942,23 @@ export default function OnboardingV2() {
   const scrollRef = useRef(null);
   const progressRef = useRef(0);
   const pulseRef = useRef(0);
+  const submittedAnswersRef = useRef([false, false, false, false]);
+  const lenisRef = useRef(null);
+  const activeQuestionRef = useRef(-1);
   const [ui, setUi] = useState({ progress: 0, stage: 0 });
   const [answers, setAnswers] = useState(["", "", "", ""]);
+  const [submittedAnswers, setSubmittedAnswers] = useState([false, false, false, false]);
   const [capabilities, setCapabilities] = useState(null);
   const [loadingCapabilities, setLoadingCapabilities] = useState(false);
+
+  useEffect(() => {
+    submittedAnswersRef.current = submittedAnswers;
+    if (activeQuestionRef.current > -1 && submittedAnswers[activeQuestionRef.current]) {
+      activeQuestionRef.current = -1;
+      lenisRef.current?.start();
+      ScrollTrigger.update();
+    }
+  }, [submittedAnswers]);
 
   useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -955,6 +975,7 @@ export default function OnboardingV2() {
       wheelMultiplier: 0.78,
       touchMultiplier: 1.15,
     });
+    lenisRef.current = lenis;
 
     const update = (time) => {
       lenis.raf(time * 1000);
@@ -971,9 +992,24 @@ export default function OnboardingV2() {
       end: "bottom bottom",
       scrub: true,
       onUpdate: (self) => {
-        const progress = self.progress;
+        const rawProgress = self.progress;
+        const gateIndex = getQuestionGateIndex(rawProgress, submittedAnswersRef.current);
+        const progress = gateIndex > -1 ? QUESTION_GATES[gateIndex] : rawProgress;
         progressRef.current = progress;
         setUi({ progress, stage: Math.min(4, Math.floor(progress * 5)) });
+        if (gateIndex > -1) {
+          const targetScroll = self.start + (self.end - self.start) * QUESTION_GATES[gateIndex];
+          if (activeQuestionRef.current !== gateIndex) {
+            activeQuestionRef.current = gateIndex;
+            window.requestAnimationFrame(() => {
+              lenis.scrollTo(targetScroll, { immediate: true, force: true });
+              window.scrollTo(0, targetScroll);
+            });
+          }
+          lenis.stop();
+        } else if (activeQuestionRef.current === -1) {
+          lenis.start();
+        }
       },
     });
 
@@ -988,6 +1024,7 @@ export default function OnboardingV2() {
     return () => {
       window.cancelAnimationFrame(resetFrame);
       window.history.scrollRestoration = previousScrollRestoration;
+      lenisRef.current = null;
       trigger.kill();
       gsap.ticker.remove(update);
       lenis.destroy();
@@ -1032,6 +1069,11 @@ export default function OnboardingV2() {
       }
       return next;
     });
+    setSubmittedAnswers((current) => {
+      const next = [...current];
+      next[index] = true;
+      return next;
+    });
   };
 
   return (
@@ -1053,6 +1095,7 @@ export default function OnboardingV2() {
         <OnboardingOverlay
           ui={ui}
           answers={answers}
+          submittedAnswers={submittedAnswers}
           capabilities={capabilities}
           loadingCapabilities={loadingCapabilities}
           onAnswerChange={handleAnswerChange}
