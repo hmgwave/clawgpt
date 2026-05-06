@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
@@ -48,6 +48,8 @@ const fallbackCapabilities = [
     body: "I will focus first where momentum is slowing down. Your agent is ready.",
   },
 ];
+
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const vertexShader = `
   attribute float aSize;
@@ -938,8 +940,13 @@ export default function OnboardingV2() {
   const [capabilities, setCapabilities] = useState(null);
   const [loadingCapabilities, setLoadingCapabilities] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    progressRef.current = 0;
+    setUi({ progress: 0, stage: 0 });
 
     const lenis = new Lenis({
       duration: window.matchMedia("(max-width: 767px)").matches ? 1.05 : 1.35,
@@ -956,6 +963,7 @@ export default function OnboardingV2() {
     lenis.on("scroll", ScrollTrigger.update);
     gsap.ticker.add(update);
     gsap.ticker.lagSmoothing(0);
+    lenis.scrollTo(0, { immediate: true, force: true });
 
     const trigger = ScrollTrigger.create({
       trigger: scrollRef.current,
@@ -969,7 +977,17 @@ export default function OnboardingV2() {
       },
     });
 
+    const resetFrame = window.requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      lenis.scrollTo(0, { immediate: true, force: true });
+      progressRef.current = 0;
+      setUi({ progress: 0, stage: 0 });
+      ScrollTrigger.refresh();
+    });
+
     return () => {
+      window.cancelAnimationFrame(resetFrame);
+      window.history.scrollRestoration = previousScrollRestoration;
       trigger.kill();
       gsap.ticker.remove(update);
       lenis.destroy();
