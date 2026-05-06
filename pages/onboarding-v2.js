@@ -49,11 +49,11 @@ const vertexShader = `
     gl_Position = projectionMatrix * modelViewPosition;
 
     float cameraDepth = clamp((-modelViewPosition.z - 3.0) / 7.0, 0.0, 1.0);
-    float depthScale = mix(1.28, 0.58, cameraDepth);
+    float depthScale = mix(1.44, 0.72, cameraDepth);
     float breath = 0.5 + 0.5 * sin(uTime * aFrequency + aSeed * 12.5663706144);
     float breathScale = 1.0 + breath * 0.12;
 
-    gl_PointSize = aSize * depthScale * breathScale * uPixelRatio * 9.0 / -modelViewPosition.z;
+    gl_PointSize = aSize * depthScale * breathScale * uPixelRatio * 18.0 / -modelViewPosition.z;
 
     vDepth = cameraDepth;
     vBreath = breath;
@@ -82,9 +82,9 @@ const fragmentShader = `
     }
 
     vec3 color = mix(uPrimaryGold, uSoftGold, vWarmth);
-    float depthOpacity = mix(0.82, 0.28, vDepth);
-    float breathOpacity = 0.05 + vBreath * 0.10;
-    float alpha = (glow * 0.62 + core * 0.38) * (depthOpacity + breathOpacity);
+    float depthOpacity = mix(0.95, 0.42, vDepth);
+    float breathOpacity = 0.06 + vBreath * 0.12;
+    float alpha = (glow * 0.7 + core * 0.45) * (depthOpacity + breathOpacity);
 
     gl_FragColor = vec4(color, alpha);
   }
