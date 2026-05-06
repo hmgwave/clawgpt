@@ -53,7 +53,7 @@ const vertexShader = `
     float breath = 0.5 + 0.5 * sin(uTime * aFrequency + aSeed * 12.5663706144);
     float breathScale = 1.0 + breath * 0.12;
 
-    gl_PointSize = aSize * depthScale * breathScale * uPixelRatio * 18.0 / -modelViewPosition.z;
+    gl_PointSize = aSize * depthScale * breathScale * uPixelRatio * 42.0 / -modelViewPosition.z;
 
     vDepth = cameraDepth;
     vBreath = breath;
@@ -74,17 +74,17 @@ const fragmentShader = `
   void main() {
     vec2 uv = gl_PointCoord - vec2(0.5);
     float radius = length(uv);
-    float core = 1.0 - smoothstep(0.0, 0.18, radius);
-    float glow = 1.0 - smoothstep(0.05, 0.5, radius);
+    float core = 1.0 - smoothstep(0.0, 0.2, radius);
+    float glow = 1.0 - smoothstep(0.03, 0.5, radius);
 
     if (glow <= 0.0) {
       discard;
     }
 
     vec3 color = mix(uPrimaryGold, uSoftGold, vWarmth);
-    float depthOpacity = mix(0.95, 0.42, vDepth);
+    float depthOpacity = mix(1.0, 0.52, vDepth);
     float breathOpacity = 0.06 + vBreath * 0.12;
-    float alpha = (glow * 0.7 + core * 0.45) * (depthOpacity + breathOpacity);
+    float alpha = (glow * 0.8 + core * 0.55) * (depthOpacity + breathOpacity);
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -105,9 +105,9 @@ function makeNebulaGeometry() {
     const cloudX = Math.sin(phi) * Math.cos(theta);
     const cloudY = Math.sin(phi) * Math.sin(theta);
     const cloudZ = Math.cos(phi);
-    const horizontalStretch = 4.9;
-    const verticalStretch = 2.25;
-    const depthStretch = 3.4;
+    const horizontalStretch = 4.25;
+    const verticalStretch = 2.05;
+    const depthStretch = 3.1;
 
     positions[i * 3] = cloudX * radius * horizontalStretch;
     positions[i * 3 + 1] = cloudY * radius * verticalStretch + Math.sin(theta * 2.0) * 0.18;
@@ -190,6 +190,7 @@ function NebulaCanvas() {
       fragmentShader,
       transparent: true,
       depthWrite: false,
+      depthTest: false,
       blending: THREE.AdditiveBlending,
     });
     const particles = new THREE.Points(geometry, material);
