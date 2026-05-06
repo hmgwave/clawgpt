@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+html,
+body,
+#__next {
+  min-height: 100%;
+  margin: 0;
+  background: #0a1628;
+}
+
+body {
+  color: #f5f0e6;
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+* {
+  box-sizing: border-box;
+}
