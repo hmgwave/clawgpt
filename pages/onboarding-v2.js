@@ -501,7 +501,8 @@ function NebulaCanvas({ progressRef, pulseRef }) {
     const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
     scene.add(lines);
 
-    const clock = new THREE.Clock();
+    let lastFrameTime = performance.now() / 1000;
+    let elapsedTime = 0;
     let animationFrame = 0;
     let frameCount = 0;
     let lowFrameCount = 0;
@@ -649,8 +650,11 @@ function NebulaCanvas({ progressRef, pulseRef }) {
     window.addEventListener("pointermove", pointerMove);
 
     const render = () => {
-      const delta = clock.getDelta();
-      const elapsed = clock.elapsedTime;
+      const currentFrameTime = performance.now() / 1000;
+      const delta = Math.min(0.1, currentFrameTime - lastFrameTime);
+      lastFrameTime = currentFrameTime;
+      elapsedTime += delta;
+      const elapsed = elapsedTime;
       if (delta > 1 / 45) {
         lowFrameCount += 1;
         if (lowFrameCount > 30) {
